@@ -6,6 +6,7 @@ my $build = Module::Build->new(
     create_makefile_pl => 'traditional',
     license            => 'perl',
     module_name        => 'HTML::Template::Compiled::Plugin::HTML_Tags',
+    dist_author        => 'Tina Mueller',
     requires => {
         'HTML::Template::Compiled' => '0.81',
     },

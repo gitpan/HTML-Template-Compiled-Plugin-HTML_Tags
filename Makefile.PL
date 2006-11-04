@@ -5,6 +5,7 @@ WriteMakefile
           'PL_FILES' => {},
           'INSTALLDIRS' => 'site',
           'NAME' => 'HTML::Template::Compiled::Plugin::HTML_Tags',
+          'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/HTML/Template/Compiled/Plugin/HTML_Tags.pm',
           'PREREQ_PM' => {
                            'HTML::Template::Compiled' => '0.81'

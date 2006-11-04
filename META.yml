@@ -1,13 +1,19 @@
 ---
 name: HTML-Template-Compiled-Plugin-HTML_Tags
-version: 0.01
-author: ~
+version: 0.02
+author:
+  - Tina Mueller
 abstract: HTC-Plugin for various HTML tags
 license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
   HTML::Template::Compiled: 0.81
 provides:
   HTML::Template::Compiled::Plugin::HTML_Tags:
     file: lib/HTML/Template/Compiled/Plugin/HTML_Tags.pm
-    version: 0.01
-generated_by: Module::Build version 0.2611
+    version: 0.02
+generated_by: Module::Build version 0.2805
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

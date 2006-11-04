@@ -9,7 +9,6 @@ use Fcntl qw(:seek);
 # ---------- HTC ----------------
 my $template;
 my $script;
-$HTML::Template::Compiled::Plugin::InlineImage::SIZE_WARNING = 0;
 {
     local $/;
     $template = <DATA>;
