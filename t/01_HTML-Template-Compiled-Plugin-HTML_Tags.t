@@ -1,9 +1,10 @@
-# $Id: 01_HTML-Template-Compiled-Plugin-HTML_Tags.t,v 1.3 2006/11/04 19:40:29 tinita Exp $
+# $Id: 01_HTML-Template-Compiled-Plugin-HTML_Tags.t,v 1.5 2006/11/28 21:26:48 tinita Exp $
 use warnings;
 use strict;
 use blib;
 use lib 't';
-use Test::More tests => 5;
+use lib '../HTML-Template-Compiled/blib/lib';
+use Test::More tests => 7;
 use_ok('HTML::Template::Compiled');
 use_ok('HTML::Template::Compiled::Plugin::HTML_Tags');
 
@@ -32,7 +33,18 @@ EOM
     );
     my $out = $htc->output;
     #print "out: $out\n";
-    cmp_ok($out, '=~', qr{<option.*1.*Jan.*<option.*2.*Feb.*<option.*Mar}s, "options");
+    cmp_ok($out, '=~', qr{<option.*1.*Jan.*<option.*2.*Feb.*<option.*selected.*Mar}s, "options");
+    $htc->param(
+        foo => [
+            [2,3],
+            [1, 'Jan'],
+            [2, 'Feb'],
+            [3, 'Mar'],
+        ],
+    );
+    $out = $htc->output;
+    #print "out: $out\n";
+    cmp_ok($out, '=~', qr{<option.*1.*Jan.*<option.*2.*.selected.*Feb.*<option.*selected.*Mar}s, "multiple options");
 }
 {
     my $htc = HTML::Template::Compiled->new(
@@ -80,6 +92,36 @@ EOM
     $out =~ s/\s+//g;
     cmp_ok($out, 'eq', $exp_3, "select");
 }
+{
+    my $htc = HTML::Template::Compiled->new(
+        plugin => ['HTML::Template::Compiled::Plugin::HTML_Tags'],
+        scalarref => \<<'EOM',
+<%HTML_OPTION_LOOP foo %>
+<%= value %>:<%= label %>(<%= selected %>)
+<%/HTML_OPTION_LOOP %>
+<%HTML_BOX_LOOP foo %>
+<%= value %>:<%= label %>(<%= selected %>)
+<%/HTML_BOX_LOOP %>
+EOM
+        debug => 0,
+    );
+    $htc->param(
+        foo => [
+            2,
+            [1, 'Jan'],
+            [2, 'Feb'],
+            [3, 'Mar'],
+        ],
+    );
+    my $out = $htc->output;
+    #print "out: $out\n";
+    $out =~ s/\s+//g;
+    cmp_ok(
+        $out, 'eq',
+          qq#1:Jan()2:Feb(selected="selected")3:Mar()#
+        . qq#1:Jan()2:Feb(checked="checked")3:Mar()#,
+        "select");
+}
 
 
 __DATA__
@@ -99,6 +141,6 @@ __DATA__
 ----------------------------
 <select name="foo" class='myselect'>
 <option value="1" >Jan</option>
-<option value="2" selected="true">Feb</option>
+<option value="2" selected="selected">Feb</option>
 <option value="3" >Mar</option>
 </select>

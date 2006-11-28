@@ -8,7 +8,7 @@ my $build = Module::Build->new(
     module_name        => 'HTML::Template::Compiled::Plugin::HTML_Tags',
     dist_author        => 'Tina Mueller',
     requires => {
-        'HTML::Template::Compiled' => '0.81',
+        'HTML::Template::Compiled' => '0.83',
     },
     recommends => {
     },

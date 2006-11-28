@@ -1,12 +1,12 @@
 package HTML::Template::Compiled::Plugin::HTML_Tags;
-# $Id: HTML_Tags.pm,v 1.9 2006/11/04 19:39:52 tinita Exp $
+# $Id: HTML_Tags.pm,v 1.13 2006/11/28 21:25:37 tinita Exp $
 use strict;
 use warnings;
 use Carp qw(croak carp);
 use HTML::Template::Compiled::Expression qw(:expressions);
 use HTML::Template::Compiled;
 HTML::Template::Compiled->register('HTML::Template::Compiled::Plugin::HTML_Tags');
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub register {
     my ($class) = @_;
@@ -19,6 +19,12 @@ sub register {
                     sub { exists $_[1]->{NAME} },
                     qw(NAME TH_ATTR TD_ATTR TR_ATTR TABLE_ATTR HEADER)
                 ],
+                HTML_OPTION_LOOP => [sub { exists $_[1]->{NAME} }, qw(NAME)],
+                HTML_BOX_LOOP    => [sub { exists $_[1]->{NAME} }, qw(NAME)],
+            },
+            HTML::Template::Compiled::Token::CLOSING_TAG() => {
+                HTML_OPTION_LOOP => [undef, qw(NAME)],
+                HTML_BOX_LOOP    => [undef, qw(NAME)],
             },
         },
         compile => {
@@ -31,9 +37,84 @@ sub register {
             HTML_TABLE => {
                 open => \&_html_table,
             },
+            HTML_OPTION_LOOP => {
+                open => \&_html_option_loop,
+                close => \&_html_option_loop_close,
+            },
+            HTML_BOX_LOOP => {
+                open => \&_html_box_loop,
+                close => \&_html_option_loop_close, # sic!
+            },
         },
     );
     return \%plugs;
+}
+
+sub _html_option_loop_close {
+    return <<'EOM';
+    }
+ }
+EOM
+}
+
+sub _option_loop {
+    my ($select_string, $var) = @_;
+    my @var = @{ $var };
+    my $selected = shift @var;
+    my %selected = defined $selected
+        ? ref $selected eq 'ARRAY'
+        ? (map { $_ => 1 } @$selected)
+        : ($selected => 1)
+        : ();
+    my @options;
+    for (@var) {
+        push @options,  {
+            value => $_->[0],
+            label => $_->[1],
+            selected => $selected{$_->[0]} ? qq#$select_string="$select_string"# : '',
+        };
+    }
+    return \@options;
+}
+
+sub _html_box_loop {
+    my ($htc, $token, $args) = @_;
+    my $attr = $token->get_attributes;
+    my $varstr = $htc->get_compiler->parse_var($htc,
+        var => $attr->{NAME},
+        method_call => $htc->method_call,
+        deref => $htc->deref,
+        formatter_path => $htc->formatter_path,
+    );
+    my $expression = <<"EOM";
+\{
+    my \$items = HTML::Template::Compiled::Plugin::HTML_Tags::_option_loop(
+        "checked",
+        $varstr,
+    );
+for my \$_html_option_loop_entry (\@\$items) {
+    my \$C = \\\$_html_option_loop_entry;
+EOM
+}
+
+sub _html_option_loop {
+    my ($htc, $token, $args) = @_;
+    my $attr = $token->get_attributes;
+    my $varstr = $htc->get_compiler->parse_var($htc,
+        var => $attr->{NAME},
+        method_call => $htc->method_call,
+        deref => $htc->deref,
+        formatter_path => $htc->formatter_path,
+    );
+    my $expression = <<"EOM";
+\{
+    my \$items = HTML::Template::Compiled::Plugin::HTML_Tags::_option_loop(
+        "selected",
+        $varstr,
+    );
+for my \$_html_option_loop_entry (\@\$items) {
+    my \$C = \\\$_html_option_loop_entry;
+EOM
 }
 
 sub _html_table {
@@ -120,9 +201,14 @@ EOM
 sub _options {
     my @aoa = @_;
     my $selected = shift @aoa;
+    my %selected = defined $selected
+    ? ref $selected eq 'ARRAY'
+    ? (map { $_ => 1 } @$selected)
+    : ($selected => 1)
+    : ();
     my $options = join "\n", map {
         my $escaped = HTML::Template::Compiled::Utils::escape_html($_->[0]);
-        my $sel = $_->[0] eq $selected ? 'selected="true"' : '';
+        my $sel = $selected{ $_->[0] } ? 'selected="selected"' : '';
         my $escaped_display = @$_ > 1
             ? HTML::Template::Compiled::Utils::escape_html($_->[1])
             : $escaped;
@@ -153,7 +239,7 @@ use HTML::Template::Compiled::Plugin::HTML_Tags;
 
 =head1 DESCRIPTION
 
-You have tnree tags with this plugin:
+You have five tags with this plugin:
 
 =over 4
 
@@ -170,7 +256,16 @@ You have tnree tags with this plugin:
 
     Output:
     <option value="opt_1">option 1</option>
-    <option value="opt_2" selected="true">option 2</option>
+    <option value="opt_2" selected="selected">option 2</option>
+
+You can also select multiple options:
+
+    $htc->param(
+        arrayref => [ ['opt_1','opt_2'],
+            ['opt_1', 'option 1'],
+            ['opt_2', 'option 2'],
+        ],
+    );
 
 =item HTML_SELECT
 
@@ -189,12 +284,60 @@ You have tnree tags with this plugin:
 
     Output:
     <select name='foo' class='myselect'>
-    <option value="opt_1" selected="true">option 1</option>
+    <option value="opt_1" selected="selected">option 1</option>
     <option value="opt_2">option 2</option>
     </select>
 
+=item HTML_OPTION_LOOP
+
+I'm using tt-style syntax hear for readability:
+
+    <select name="foo">
+    [%html_option_loop arrayref%]
+    <option value="[%= value%]" [%= selected%] >[%= label %]</option>
+    [%/html_option_loop%]
+    </select>
+
+    $htc->param(
+        arrayref => [ 'opt_2'
+            ['opt_1', 'option 1'],
+            ['opt_2', 'option 2'],
+        ],
+    );
+
+    Output:
+    <select name="foo">
+    <option value="opt_1" >option 1</option>
+    <option value="opt_2" selected="selected">option 2</option>
+    </select>
+
+=item HTML_BOX_LOOP
+
+I'm using tt-style syntax hear for readability:
+
+    [%html_box_loop arrayref%]
+    <checkbox name="foo" value="[%= value%]" [%= selected%] >[%= label %]
+    [%/html_box_loop%]
+
+    $htc->param(
+        arrayref => [ 'opt_2'
+            ['opt_1', 'option 1'],
+            ['opt_2', 'option 2'],
+        ],
+    );
+
+    Output:
+    <checkbox name="foo" value="opt_1" >option 1
+    <checkbox name="foo" value="opt_2" checked="checked">option 2
+
+This can also be used with radio boxes. Code is the same.
+
 =item HTML_TABLE
 
+    Easy example:
+    <tmpl_html_table arrayref>
+
+    Example with all possible attributes:
     <tmpl_html_table arrayref
     header=1
     table_attr="bgcolor='black'"
