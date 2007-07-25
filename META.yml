@@ -1,6 +1,6 @@
 ---
 name: HTML-Template-Compiled-Plugin-HTML_Tags
-version: 0.03
+version: 0.04
 author:
   - Tina Mueller
 abstract: HTC-Plugin for various HTML tags
@@ -12,8 +12,8 @@ requires:
 provides:
   HTML::Template::Compiled::Plugin::HTML_Tags:
     file: lib/HTML/Template/Compiled/Plugin/HTML_Tags.pm
-    version: 0.03
-generated_by: Module::Build version 0.2805
+    version: 0.04
+generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2

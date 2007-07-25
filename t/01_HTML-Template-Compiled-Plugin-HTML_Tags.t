@@ -1,10 +1,10 @@
-# $Id: 01_HTML-Template-Compiled-Plugin-HTML_Tags.t,v 1.5 2006/11/28 21:26:48 tinita Exp $
+# $Id: 01_HTML-Template-Compiled-Plugin-HTML_Tags.t,v 1.6 2007/07/25 18:54:16 tinita Exp $
 use warnings;
 use strict;
 use blib;
 use lib 't';
 use lib '../HTML-Template-Compiled/blib/lib';
-use Test::More tests => 7;
+use Test::More tests => 8;
 use_ok('HTML::Template::Compiled');
 use_ok('HTML::Template::Compiled::Plugin::HTML_Tags');
 
@@ -45,6 +45,19 @@ EOM
     $out = $htc->output;
     #print "out: $out\n";
     cmp_ok($out, '=~', qr{<option.*1.*Jan.*<option.*2.*.selected.*Feb.*<option.*selected.*Mar}s, "multiple options");
+
+    $htc->param(
+        foo => [
+            ['Feb','Mar'],
+            'Jan',
+            'Feb',
+            'Mar',
+        ],
+    );
+    $out = $htc->output;
+    #print "out: $out\n";
+    cmp_ok($out, '=~', qr{<option.*Jan.*Jan.*<option.*Feb.*.selected.*Feb.*<option.*selected.*Mar}s, "multiple options");
+
 }
 {
     my $htc = HTML::Template::Compiled->new(

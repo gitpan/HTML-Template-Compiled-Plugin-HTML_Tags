@@ -1,12 +1,12 @@
 package HTML::Template::Compiled::Plugin::HTML_Tags;
-# $Id: HTML_Tags.pm,v 1.13 2006/11/28 21:25:37 tinita Exp $
+# $Id: HTML_Tags.pm,v 1.16 2007/07/25 18:54:16 tinita Exp $
 use strict;
 use warnings;
 use Carp qw(croak carp);
 use HTML::Template::Compiled::Expression qw(:expressions);
 use HTML::Template::Compiled;
 HTML::Template::Compiled->register('HTML::Template::Compiled::Plugin::HTML_Tags');
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub register {
     my ($class) = @_;
@@ -207,6 +207,10 @@ sub _options {
     : ($selected => 1)
     : ();
     my $options = join "\n", map {
+        unless (ref $_ eq 'ARRAY') {
+            # values and labels should be equal
+            $_ = [$_, $_];
+        }
         my $escaped = HTML::Template::Compiled::Utils::escape_html($_->[0]);
         my $sel = $selected{ $_->[0] } ? 'selected="selected"' : '';
         my $escaped_display = @$_ > 1
@@ -230,7 +234,7 @@ HTML::Template::Compiled::Plugin::HTML_Tags - HTC-Plugin for various HTML tags
 
 =head1 SYNOPSIS
 
-use HTML::Template::Compiled::Plugin::HTML_Tags;
+    use HTML::Template::Compiled::Plugin::HTML_Tags;
 
     my $htc = HTML::Template::Compiled->new(
         plugin => [qw(HTML::Template::Compiled::Plugin::HTML_Tags)],
@@ -239,7 +243,7 @@ use HTML::Template::Compiled::Plugin::HTML_Tags;
 
 =head1 DESCRIPTION
 
-You have five tags with this plugin:
+This plugin offers you five tags:
 
 =over 4
 
@@ -248,7 +252,7 @@ You have five tags with this plugin:
     <tmpl_html_option arrayref>
 
     $htc->param(
-        arrayref => [ 'opt_2'
+        arrayref => [ 'opt_2', # selected
             ['opt_1', 'option 1'],
             ['opt_2', 'option 2'],
         ],
@@ -261,11 +265,27 @@ You have five tags with this plugin:
 You can also select multiple options:
 
     $htc->param(
-        arrayref => [ ['opt_1','opt_2'],
+        arrayref => [ ['opt_1','opt_2'], # selected
             ['opt_1', 'option 1'],
             ['opt_2', 'option 2'],
         ],
     );
+
+If you have values and labels equal (for example in a year-select),
+you can use this syntax:
+
+    $htc->param(
+        arrayref => [ 2007, # selected
+            '2005',
+            '2006',
+            '2007',
+        ],
+    );
+
+    Output:
+    <option value="2005">2005</option>
+    <option value="2006">2006</option>
+    <option value="2007" selected="selected">2007</option>
 
 =item HTML_SELECT
 
@@ -276,7 +296,7 @@ You can also select multiple options:
             name => 'foo',
             value => 'opt_1',
             options => [
-                ['opt_1', 'option 1'],
+                ['opt_1', 'option 1'], # or use simple scalars if values and labals are equal
                 ['opt_2', 'option 2'],
             ],
         },
@@ -290,7 +310,8 @@ You can also select multiple options:
 
 =item HTML_OPTION_LOOP
 
-I'm using tt-style syntax hear for readability:
+I'm using tt-style syntax here (see option C<tagstyle> in
+L<HTML::Template::Compiled>) for readability:
 
     <select name="foo">
     [%html_option_loop arrayref%]
@@ -299,8 +320,8 @@ I'm using tt-style syntax hear for readability:
     </select>
 
     $htc->param(
-        arrayref => [ 'opt_2'
-            ['opt_1', 'option 1'],
+        arrayref => [ 'opt_2',
+            ['opt_1', 'option 1'], # or use simple scalars if values and labals are equal
             ['opt_2', 'option 2'],
         ],
     );
@@ -313,15 +334,15 @@ I'm using tt-style syntax hear for readability:
 
 =item HTML_BOX_LOOP
 
-I'm using tt-style syntax hear for readability:
+I'm using tt-style syntax here for readability:
 
     [%html_box_loop arrayref%]
     <checkbox name="foo" value="[%= value%]" [%= selected%] >[%= label %]
     [%/html_box_loop%]
 
     $htc->param(
-        arrayref => [ 'opt_2'
-            ['opt_1', 'option 1'],
+        arrayref => [ 'opt_2',
+            ['opt_1', 'option 1'], # or use simple scalars if values and labals are equal
             ['opt_2', 'option 2'],
         ],
     );
@@ -343,11 +364,11 @@ This can also be used with radio boxes. Code is the same.
     table_attr="bgcolor='black'"
     tr_attr="bgcolor='red'"
     th_attr="bgcolor='green'"
-    td_attr="bgcolor='green'"
+    td_attr="bgcolor='green'" >
 
     $htc->param(
         arrayref => [
-            [qw(foo bar)],
+            [qw(foo bar)], # table header
             [qw(foo bar)],
             [qw(foo bar)],
         ],
