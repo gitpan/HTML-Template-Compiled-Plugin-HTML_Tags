@@ -1,12 +1,12 @@
 package HTML::Template::Compiled::Plugin::HTML_Tags;
-# $Id: HTML_Tags.pm,v 1.16 2007/07/25 18:54:16 tinita Exp $
+# $Id: HTML_Tags.pm,v 1.17 2007/10/27 11:33:29 tinita Exp $
 use strict;
 use warnings;
 use Carp qw(croak carp);
 use HTML::Template::Compiled::Expression qw(:expressions);
 use HTML::Template::Compiled;
 HTML::Template::Compiled->register('HTML::Template::Compiled::Plugin::HTML_Tags');
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub register {
     my ($class) = @_;
@@ -190,7 +190,10 @@ sub _html_option {
         deref => $htc->deref,
         formatter_path => $htc->formatter_path,
     );
-    my $expression = qq#my \@aoa = \@{ +$varstr };\n#;
+    my $expression = qq!
+my \$aref = $varstr;
+my \@aoa = \@\$aref;
+!;
     $expression .= <<'EOM';
 my $options = HTML::Template::Compiled::Plugin::HTML_Tags::_options(@aoa);
 EOM

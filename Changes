@@ -1,5 +1,8 @@
 Revision history for Perl extension HTML::Template::Compiled::Plugin::HTML_Tags.
 
+0.05 Sat Oct 27 13:30:30 CEST 2007
+- Bugfix: weird bug with variables vanishing when using filecache
+
 0.04 Wed Jul 25 20:52:00 CEST 2007
 - Fixed typos in documentation
 - Added: pass simple scalars for options if values and labels are equal
